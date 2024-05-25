@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+DOTFILES_DIR=~/dotfiles
+REPO_URL="https://github.com/bagusrizkis/dotfiles.git"
+
 # Close any open System Preferences panes, to prevent them from overriding
 # settings we’re about to change
 osascript -e 'tell application "System Preferences" to quit'
@@ -8,14 +11,18 @@ osascript -e 'tell application "System Preferences" to quit'
 sudo -v
 
 # Keep-alive: update existing `sudo` time stamp until `macos.sh` has finished
-while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+while true; do
+    sudo -n true
+    sleep 60
+    kill -0 "$$" || exit
+done 2>/dev/null &
 
 echo "Hello $(whoami)! Let's get you set up."
 
 ## Homebrew ##
 
 which -s brew
-if [[ $? != 0 ]] ; then
+if [[ $? != 0 ]]; then
     echo "Installing Hombrew"
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 else
@@ -41,6 +48,7 @@ brew_install neovim
 brew_install ripgrep
 brew_install fd
 brew_install tree
+brew_install git
 # brew install tmux
 
 # - Install GUI Apps
@@ -56,7 +64,7 @@ brew cleanup
 ## ZSH ##
 
 which -s zsh
-if [[ $? != 0 ]] ; then
+if [[ $? != 0 ]]; then
     echo "Installing zsh"
     # - Install ohmyzsh
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -65,3 +73,19 @@ if [[ $? != 0 ]] ; then
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 fi
 
+## dotfiles ##
+pushd .
+
+if [ -d "$DOTFILES_DIR" ]; then
+    echo "Dotfiles directory exists. Pulling the latest changes..."
+    cd "$DOTFILES_DIR" && git pull
+else
+    echo "Dotfiles directory does not exist. Cloning the repository..."
+    git clone "$REPO_URL" "$DOTFILES_DIR"
+    cd "$DOTFILES_DIR"
+fi
+
+popd
+
+## NVIM ##
+ln -s ~/dotfiles/.config/nvim ~/.config/nvim
