@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Run: curl -o- https://raw.githubusercontent.com/bagusrizkis/dotfiles/main/macos.sh | bash
+
 DOTFILES_DIR=~/dotfiles
 REPO_URL="https://github.com/bagusrizkis/dotfiles.git"
 
@@ -31,7 +33,7 @@ else
 fi
 
 brew_install() {
-    echo "\nInstalling $1"
+    echo "Installing $1"
     if brew list $1 &>/dev/null; then
         echo "${1} is already installed"
     else
@@ -88,4 +90,24 @@ fi
 popd
 
 ## NVIM ##
-ln -s ~/dotfiles/.config/nvim ~/.config/nvim
+NVIM_DIR=~/.config/nvim
+TARGET_LINK=~/dotfiles/.config/nvim
+
+if [ -L "$NVIM_DIR" ]; then
+    if [ "$(readlink "$NVIM_DIR")" != "$TARGET_LINK" ]; then
+        echo "nvim directory is a symlink but points to a different target. Replacing the symlink..."
+        rm "$NVIM_DIR"
+        ln -s "$TARGET_LINK" "$NVIM_DIR"
+    else
+        echo "nvim directory is already correctly symlinked to dotfiles."
+    fi
+else
+    if [ -d "$NVIM_DIR" ]; then
+        echo "nvim directory exists and is not a symlink. Removing the directory..."
+        rm -rf "$NVIM_DIR"
+    fi
+    echo "Creating symlink for nvim directory..."
+    ln -s "$TARGET_LINK" "$NVIM_DIR"
+fi
+
+echo "Setup complete."
